@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <meta name="format-detection" content="telephone=no">
+        <title>爆款清单</title>
+        <link rel="stylesheet" href="css/style.css">
+        <script src="js/hotcss.js"></script>
+        <script src="js/jquery-2.2.1.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="js/vue.js" type="text/javascript" charset="utf-8"></script>
+        <script src="js/data.js" type="text/javascript" charset="utf-8"></script>
+    </head>
+
+    <body>
+        <div class="main-box">
+            <img src="img/sharePic.png" style="display: block;height: 0;" />
+
+            <div class="headPic"><img src="img/headPic.jpg" /></div>
+
+            <div class="baokuan-over">
+                <ul class="baokuan-box" id="baokuanBox">
+                    <li v-for="img in imgArray">
+                        <a :href="img.link"><img :src="img.img" /></a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="nav-bg"></div>
+            <div class="nav-box">
+                <div class="nav-over">
+                    <ul class="nav-list" id="nav-list">
+                        <li class="nav-pane" v-for="e in nav">{{ e }}</li>
+                    </ul>
+                </div>
+                <div class="btn-more">
+                    <div class="jiantou"><img src="img/arrow.png" /></div>
+                </div>
+                <ul class="nav-module" id="nav-module">
+                    <li class="nav-btn" v-for="e in nav">{{ e }}</li>
+                </ul>
+            </div>
+
+            <div id="floor-box">
+                <div v-for="floor in floorArray" class="module" id="{{ 'floor'+($index+1) }}">
+                    <goods-list :floor-data="floor" :headline="headline[$index]"></goods-list>
+                </div>
+            </div>
+
+            <div class="go-top">
+                <div class="goTopBg"></div>
+                <img src="img/go-top.png" />
+            </div>
+
+        </div>
+
+        <script type="text/javascript">
+            $(function() {
+                $('.nav-pane').eq(0).addClass('on');
+                $('.nav-btn').eq(0).addClass('on');
+                //	导航展开
+                $('.btn-more').click(function() {
+                    $('.nav-module').toggle();
+                    $('.jiantou').toggleClass('more-zhuan');
+                });
+                var remHeight = innerWidth / 16,
+                    floatHeight = $('.headPic').height() + $('.baokuan-over').height();
+                //console.log(remHeight);
+                var floorArray = $('.module');
+                var floorHeightArray = [];
+                for(i = 0; i < floorArray.length; i++) {
+                    floorHeightArray[i] = $(floorArray[i]).offset().top;
+                };
+                floorHeightArray.unshift(0);
+                floorHeightArray.push(1e9);
+                //console.log(floorHeightArray);
+                var scrollTimer = null;
+                $(window).on('scroll', function() {
+                    $('.nav-module').hide();
+                    $('.jiantou').removeClass('more-zhuan');
+                    var scrollHeight = $(document).scrollTop();
+                    //横向导航栏悬起，回到顶部按钮显示出来
+                    if(scrollHeight > floatHeight) {
+                        $('.nav-box').addClass('nav-float');
+                        $('.go-top').show();
+                    } else {
+                        $('.nav-box').removeClass('nav-float');
+                        $('.go-top').hide();
+                    };
+                    //清除掉上一个计时器
+                    if(scrollTimer) {
+                        clearTimeout(scrollTimer);
+                    };
+                    //延迟滚动条判断，减少性能消耗
+                    scrollTimer = setTimeout(function() {
+                        //rem会导致除不尽，小数点后有误差，加1弥补
+                        var nowHeight = scrollHeight + $('.nav-box').height() + 1;
+                        //console.log(nowHeight)
+                        for(i = 0; i <= floorArray.length; i++) {
+                            if(floorHeightArray[i] <= nowHeight && nowHeight <= floorHeightArray[i + 1]) {
+                                //console.log(i)
+                                //当高度小于第一个楼层时，导航按钮不能取eq(-1)，而应该置为eq(0)
+                                var a;
+                                switch(i) {
+                                    case 0:
+                                        a = 0;
+                                        break;
+                                    default:
+                                        a = i - 1;
+                                };
+
+                                function btnON(ele, elementIndex) {
+                                    $(ele).eq(elementIndex).addClass('on').siblings().removeClass('on');
+                                };
+                                btnON('.nav-pane', a);
+                                btnON('.nav-btn', a);
+                                $('.nav-over').scrollLeft(remHeight * 4 * (i - 2.5));
+                                //i之后的不再需要判断，所以跳出循环
+                                return;
+                            } else {
+                                //console.log("i"+i)
+                            };
+                        };
+                    }, 300);
+                });
+                //楼层跳转
+                $('.nav-pane,.nav-btn').click(function() {
+                    var index = $(this).index(),
+                        navHeight = $('.nav-list').height();
+                    $("body").stop(true).animate({
+                        scrollTop: $(".module").eq(index).offset().top - navHeight
+                    }, 300);
+                    $('.nav-module').hide();
+                });
+                //回到顶部				
+                $('.go-top').click(function() {
+                    $("body").animate({
+                        scrollTop: 0
+                    }, 300)
+                });
+            })
+        </script>
+    </body>
+
+</html>
